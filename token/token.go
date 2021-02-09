@@ -25,9 +25,23 @@ const (
 	LPAREN = "("
 	RPAREN = ")"
 	LBRACE = "{"
-	RBRACE = "{"
+	RBRACE = "}"
 
 	//キーワード
 	FUNCTION = "FUNCTION"
 	LET ="LET"
 )
+
+var keywords = map[string]TokenType{
+	"fn": FUNCTION,
+	"let": LET,
+}
+
+//渡された識別子がキーワードかどうかを確認、違うのならばTokenType定数を返す。
+func LookupIdent(ident string) TokenType {
+	if tok, ok := keywords[ident]; ok{
+		 return tok
+	} else {
+		return IDENT
+	}
+}

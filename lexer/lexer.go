@@ -15,7 +15,7 @@ func New(input string) *Lexer {
 	return  l
 }
 
-//lはレシーバー,*はポインタ
+//lはレシーバー,*はポインタ. tokenを読み終わって、positionをずらすため
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
 		l.ch = 0
@@ -49,13 +49,38 @@ func (l *Lexer) NextToken() token.Token  {
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
+	default:
+		if isLetter(l.ch){
+			tok.Literal = l.readIdentifier()
+			tok.Type = token.LookupIdent(tok.Literal)
+			return tok
+		} else {
+			tok = newToken(token.ILLEGAL, l.ch)
+		}
 	}
 	l.readChar()
 	return tok
 }
 
+//tokenTypeとchからtokenを生成する。
 func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(ch)}
+	return token.Token{ Type: tokenType, Literal: string(ch) }
 }
+
+//識別子を読んで、非英字に到達するまで字句解析器の位置を進めていく。
+func (l *Lexer) readIdentifier() string {
+	position := l.position
+	for isLetter(l.ch){
+		l.readChar()
+	}
+	return l.input[ position:l.position ]
+}
+
+//judge that is alphabet
+func isLetter(ch byte) bool {
+	return  'a' <= ch && ch <='z' || 'A' <= ch && ch <='Z' || ch == '_' //_も英字として認識する。
+}
+
+
 
 
