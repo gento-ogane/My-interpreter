@@ -3,8 +3,8 @@ package token
 type TokenType string
 
 type Token struct {
-	Type TokenType
-	Literal string
+	Type TokenType //属性(識別子とか{とか数字とか)
+	Literal string //文字部(実体の部分)
 }
 
 const (
