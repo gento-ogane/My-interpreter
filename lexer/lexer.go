@@ -3,16 +3,16 @@ package lexer
 import "monkey/token"
 
 type Lexer struct {
-	input string
-	position int// 入力における現在の文字
-	readPosition int // これから読み込む位置(現在の文字の次)
-	ch byte //現在検査中の文字, 慣習的に数値量ではなく生データであることを示す
+	input        string
+	position     int  // 入力における現在の文字
+	readPosition int  // これから読み込む位置(現在の文字の次)
+	ch           byte //現在検査中の文字, 慣習的に数値量ではなく生データであることを示す
 }
 
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
 	l.readChar()
-	return  l
+	return l
 }
 
 //lはレシーバー,*はポインタ. tokenを読み終わって、positionをずらすため
@@ -26,22 +26,37 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
-func (l *Lexer) NextToken() token.Token  {
+//現在検査中のchを見て、その文字が何であるかにおうじてトークンを返す。
+func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
+
+	l.skipWhitespace()
 
 	switch l.ch {
 	case '=':
 		tok = newToken(token.ASSIGN, l.ch)
+	case '+':
+		tok = newToken(token.PLUS, l.ch)
+	case '-':
+		tok = newToken(token.MINUS, l.ch)
+	case '!':
+		tok = newToken(token.BANG, l.ch)
+	case '/':
+		tok = newToken(token.SLASH, l.ch)
+	case '*':
+		tok = newToken(token.ASTERISK, l.ch)
+	case '<':
+		tok = newToken(token.LT, l.ch)
+	case '>':
+		tok = newToken(token.GT, l.ch)
 	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)
+	case ',':
+		tok = newToken(token.COMMA, l.ch)
 	case '(':
 		tok = newToken(token.LPAREN, l.ch)
 	case ')':
 		tok = newToken(token.RPAREN, l.ch)
-	case ',':
-		tok = newToken(token.COMMA, l.ch)
-	case '+':
-		tok = newToken(token.PLUS, l.ch)
 	case '{':
 		tok = newToken(token.LBRACE, l.ch)
 	case '}':
@@ -50,9 +65,13 @@ func (l *Lexer) NextToken() token.Token  {
 		tok.Literal = ""
 		tok.Type = token.EOF
 	default:
-		if isLetter(l.ch){
-			tok.Literal = l.readIdentifier()
-			tok.Type = token.LookupIdent(tok.Literal)
+		if isLetter(l.ch) { //文字列だった場合
+			tok.Literal = l.readIdentifier()          //文字列のまとまりを読む
+			tok.Type = token.LookupIdent(tok.Literal) //識別子typeか予約後typeを判別して代入
+			return tok                                //readChar()を呼ぶ必要がないため
+		} else if isDigit(l.ch) {
+			tok.Type = token.INT
+			tok.Literal = l.readNumber()
 			return tok
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch)
@@ -64,23 +83,47 @@ func (l *Lexer) NextToken() token.Token  {
 
 //tokenTypeとchからtokenを生成する。
 func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{ Type: tokenType, Literal: string(ch) }
+	return token.Token{Type: tokenType, Literal: string(ch)}
 }
 
 //識別子を読んで、非英字に到達するまで字句解析器の位置を進めていく。
 func (l *Lexer) readIdentifier() string {
 	position := l.position
-	for isLetter(l.ch){
+	for isLetter(l.ch) {
 		l.readChar()
 	}
-	return l.input[ position:l.position ]
+	return l.input[position:l.position]
 }
 
-//judge that is alphabet
+//judge that is a alphabet?
 func isLetter(ch byte) bool {
-	return  'a' <= ch && ch <='z' || 'A' <= ch && ch <='Z' || ch == '_' //_も英字として認識する。
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_' //_も英字として認識する。
 }
 
+func (l *Lexer) skipWhitespace() {
+	for l.ch == ' ' || l.ch == '\n' || l.ch == '\r' || l.ch == '\t' {
+		l.readChar()
+	}
+}
 
+//識別子を読んで、非数字に到達するまで字句解析器の位置を進めていく。
+func (l *Lexer) readNumber() string {
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
 
+func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
+}
 
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
+
+}
