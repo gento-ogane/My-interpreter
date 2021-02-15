@@ -4,6 +4,7 @@ import (
 	"monkey/token"
 )
 
+//部分木
 type Node interface {
 	TokenLiteral() string
 }
@@ -42,6 +43,7 @@ type LetStatement struct {
 func (ls *LetStatement) statementNode()       {}
 func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
 
+//識別子
 type Identifier struct {
 	Token token.Token
 	Value string
@@ -49,3 +51,12 @@ type Identifier struct {
 
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+
+//return文
+type ReturnStatement struct {
+	Token       token.Token
+	ReturnValue Expression
+}
+
+func (rs *ReturnStatement) statementNode()       {}
+func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
