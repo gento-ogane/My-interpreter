@@ -142,3 +142,39 @@ func TestIdentifierExpression(t *testing.T) {
 	}
 
 }
+
+//整数リテラルオンリーの式構文解析
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "5;"
+
+	l := lexer.New(input)
+	t.Log(*l)
+	p := New(l)
+	t.Log(p)
+	program := p.ParseProgram()
+	t.Log(program)
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program has not enough statements. got =%d", len(program.Statements))
+	}
+
+	//program.Statementsに含まれる唯一の文が*ast.ExpressionStatementであることの確認
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement) //okはmapに含まれているかどうかの確認
+	if !ok {
+		t.Fatalf("program.Satatements[0] is not *astExpressionStatements. got =%T", program.Statements[0])
+	}
+	//同上
+	literal, ok := stmt.Expression.(*ast.IntegerLiteral) //okはmapに含まれているかどうかの確認
+	if !ok {
+		t.Fatalf("exp not *ast.IntegerLiteral. got =%T", stmt.Expression)
+	}
+	//識別子が正しいか確認
+	if literal.Value != 5 {
+		t.Errorf("literal.Value not %d. got=%d", 5, literal.Value)
+	}
+	if literal.TokenLiteral() != "5" {
+		t.Errorf("literal.TokenLiteral not %s. got=%s", "5", literal.TokenLiteral())
+	}
+
+}

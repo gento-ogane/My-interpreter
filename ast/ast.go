@@ -71,17 +71,6 @@ func (ls *LetStatement) String() string {
 	return out.String()
 }
 
-//識別子(値)
-type Identifier struct {
-	Token token.Token
-	Value string
-}
-
-func (i *Identifier) expressionNode()      {}
-func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
-
-func (i *Identifier) String() string { return i.Value }
-
 //return文
 type ReturnStatement struct {
 	Token       token.Token
@@ -118,3 +107,23 @@ func (es *ExpressionStatement) String() string {
 	}
 	return ""
 }
+
+//識別子(値)
+type Identifier struct {
+	Token token.Token
+	Value string
+}
+
+func (i *Identifier) expressionNode()      {}
+func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+func (i *Identifier) String() string       { return i.Value }
+
+//整数リテラル(値)
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64 //"5"という値を5に変換する必要がある。
+}
+
+func (il *IntegerLiteral) expressionNode()      {}
+func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
+func (il *IntegerLiteral) String() string       { return il.Token.Literal }
