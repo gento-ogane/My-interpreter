@@ -4,8 +4,8 @@ import "monkey/token"
 
 type Lexer struct {
 	input        string
-	position     int  // 入力における現在の文字
-	readPosition int  // これから読み込む位置(現在の文字の次)
+	position     int  // 入力における現在の文字位置
+	readPosition int  // これから読み込む次の文字位置
 	ch           byte //現在検査中の文字, 慣習的に数値量ではなく生データであることを示す
 }
 
@@ -18,26 +18,26 @@ func New(input string) *Lexer {
 //lはレシーバー,*はポインタ. tokenを読み終わって、positionをずらすため
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
-		l.ch = 0
+		l.ch = 0 //ASCIIで"Null"の意味。ファイルの終わり
 	} else {
-		l.ch = l.input[l.readPosition]
+		l.ch = l.input[l.readPosition] //次の文字をセット
 	}
 	l.position = l.readPosition
 	l.readPosition += 1
 }
 
-//現在検査中のchを見て、その文字が何であるかにおうじてトークンを返す。
+//現在検査中のchを見て、その文字が何であるかに応じてトークンを返す。
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
-	l.skipWhitespace()
+	l.skipWhitespace() //スペースを読み飛ばす。
 
 	switch l.ch {
 	case '=':
 		if l.peekChar() == '=' {
-			ch := l.ch
+			ch := l.ch //現在の文字
 			l.readChar()
-			literal := string(ch) + string(l.ch)
+			literal := string(ch) + string(l.ch) //現在の文字+次の文字なので"=="
 			tok = token.Token{Type: token.EQ, Literal: literal}
 		} else {
 			tok = newToken(token.ASSIGN, l.ch)
@@ -50,7 +50,7 @@ func (l *Lexer) NextToken() token.Token {
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
-			literal := string(ch) + string(l.ch)
+			literal := string(ch) + string(l.ch) //現在の文字+次の文字なので"!="
 			tok = token.Token{Type: token.NOT_EQ, Literal: literal}
 		} else {
 			tok = newToken(token.BANG, l.ch)
@@ -75,24 +75,24 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LBRACE, l.ch)
 	case '}':
 		tok = newToken(token.RBRACE, l.ch)
-	case 0:
+	case 0: //ASCIIの"Null"。何もない、ファイルの終わりを表す。
 		tok.Literal = ""
 		tok.Type = token.EOF
-	default:
+	default: //記号ではなく、文字列がでてきた場合、予約後か識別子かを区別する。
 		if isLetter(l.ch) { //文字列だった場合
 			tok.Literal = l.readIdentifier()          //文字列のまとまりを読む
 			tok.Type = token.LookupIdent(tok.Literal) //識別子typeか予約後typeを判別して代入
 			return tok                                //readChar()を呼ぶ必要がないため
-		} else if isDigit(l.ch) {
+		} else if isDigit(l.ch) { //数字だった場合
 			tok.Type = token.INT
 			tok.Literal = l.readNumber()
 			return tok
-		} else {
+		} else { //その他搭載されていないILLEGALなToken
 			tok = newToken(token.ILLEGAL, l.ch)
 		}
 	}
 	l.readChar()
-	return tok
+	return tok //現在検査中のchを見て、その文字が何であるかに応じてトークンを返す。
 }
 
 //tokenTypeとchからtokenを生成する。

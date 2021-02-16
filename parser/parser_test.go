@@ -106,3 +106,39 @@ return 993322;
 	}
 
 }
+
+//識別子オンリーの式構文解析
+func TestIdentifierExpression(t *testing.T) {
+	input := "foobar;"
+
+	l := lexer.New(input)
+	t.Log(*l)
+	p := New(l)
+	t.Log(p)
+	program := p.ParseProgram()
+	t.Log(program)
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program has not enough statements. got =%d", len(program.Statements))
+	}
+
+	//program.Statementsに含まれる唯一の文が*ast.ExpressionStatementであることの確認
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement) //okはmapに含まれているかどうかの確認
+	if !ok {
+		t.Fatalf("program.Satatements[0] is not *astExpressionStatements. got =%T", program.Statements[0])
+	}
+	//同上
+	ident, ok := stmt.Expression.(*ast.Identifier) //okはmapに含まれているかどうかの確認
+	if !ok {
+		t.Fatalf("exp not *ast.Identifier. got =%T", stmt.Expression)
+	}
+	//識別子が正しいか確認
+	if ident.Value != "foobar" {
+		t.Errorf("ident.Value not %s. got=%s", "foobar", ident.Value)
+	}
+	if ident.TokenLiteral() != "foobar" {
+		t.Errorf("ident.TokenLiteral not %s. got=%s", "foobar", ident.TokenLiteral())
+	}
+
+}

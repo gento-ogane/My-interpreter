@@ -8,19 +8,33 @@ import (
 )
 
 type Parser struct {
-	l         *lexer.Lexer //字句解析インスタンスへのポインタ
-	errors    []string
-	curToken  token.Token //現在のToken
-	peekToken token.Token //次のToken
+	l              *lexer.Lexer //字句解析インスタンスへのポインタ
+	errors         []string
+	curToken       token.Token //現在のToken
+	peekToken      token.Token //次のToken
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l, errors: []string{}} //?これはなにをしているのか？なぜ参照代入？
+	p := &Parser{
+		l:      l,
+		errors: []string{},
+	}
+
+	p.prefixParseFns = make(map[token.TokenType]prefixParseFn) //mapの初期化(makeは指定された型の、初期化された使用できるようにしたマップを返す)
+	p.registerPrefix(token.IDENT, p.parseIdentifier)           //構文解析関数の登録
+
 	//２つのトークンを読み込む
 	p.nextToken()
 	p.nextToken()
 
 	return p
+}
+
+//*ast.Identifierを返却する
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) nextToken() {
@@ -34,7 +48,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	program.Statements = []ast.Statement{}
 
 	for p.curToken.Type != token.EOF { //EOFトークンに達するまで入力のトークンを繰り返して読む。
-		stmt := p.parseStatement() //どんな種類の文かを判断し、そのstatementを返却する。ない場合は、nil
+		stmt := p.parseStatement() //どんな種類の文かを判断し、そのstatementを返却する。
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt) //Statementsに追加する.
 			//これはルートノードにあるスライスだった。
@@ -44,6 +58,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return program
 }
 
+//どんな種類の文かを判断し、そのstatementを返却する。
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
@@ -51,7 +66,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -86,6 +101,17 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 }
 
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{Token: p.curToken} //ASTNodeの構築
+
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) { //セミコロンは省略可能REPLで楽になる。
+		p.nextToken()
+	}
+	return stmt
+}
+
 func (p *Parser) curTokenIs(t token.TokenType) bool {
 	return p.curToken.Type == t
 }
@@ -112,4 +138,37 @@ func (p *Parser) Errors() []string {
 func (p *Parser) peekError(t token.TokenType) {
 	msg := fmt.Sprintf("expected next token to be %s,got %s instead", t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
+}
+
+type (
+	prefixParseFn func() ast.Expression                          //前置構文解析関数,-1とか
+	infixParseFn  func(expression ast.Expression) ast.Expression //中置構文解析関数、引数は演算子の左側,5*8とか
+)
+
+//tokenTypeに応じて適切な関数を追加する。
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
+}
+
+const (
+	_int = iota
+	LOWEST
+	EQUELS      //==
+	LESSGREATER //> OR <
+	SUM         //+
+	PRODUCT     //*
+	PREFIX      //-X OR !X
+	CALL        //myFunction(X)
+)
+
+func (p *Parser) parseExpression(produce int) ast.Expression {
+	prefix := p.prefixParseFns[p.curToken.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExp := prefix()
+	return leftExp
 }

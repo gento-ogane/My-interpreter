@@ -71,7 +71,7 @@ func (ls *LetStatement) String() string {
 	return out.String()
 }
 
-//識別子
+//識別子(値)
 type Identifier struct {
 	Token token.Token
 	Value string

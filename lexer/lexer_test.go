@@ -6,6 +6,7 @@ import (
 	"monkey/token"
 )
 
+//inputからtoken列を返却する。それの順番が合っているか、LiteralとTypeが一致しているかのテスト
 func TestNextToken(t *testing.T) {
 	input := `let five = 5;
 	let ten = 10;
@@ -104,11 +105,11 @@ func TestNextToken(t *testing.T) {
 		{token.SEMICOLON, ";"},
 	}
 
-	l := New(input)
+	l := New(input) //inputに対するLexerインスタインスを作成する。
 
 	//for文、rage指定はtestsのlength
 	for i, tt := range tests {
-		tok := l.NextToken()
+		tok := l.NextToken() //次のtokenをswitchで識別して返却する。
 		//読み込んだtokenのTypeが予想とは異なったら
 		if tok.Type != tt.expectedType {
 			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
