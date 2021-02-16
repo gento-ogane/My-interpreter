@@ -28,13 +28,13 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.l.NextToken()
 }
 
-//Parserを受け取って、astを返却する。
+//Parserを受け取って、astを返却する。 メインの処理文
 func (p *Parser) ParseProgram() *ast.Program {
-	program := &ast.Program{} //astルートノードの作成
+	program := &ast.Program{} //最初にastルートノードの作成。
 	program.Statements = []ast.Statement{}
 
 	for p.curToken.Type != token.EOF { //EOFトークンに達するまで入力のトークンを繰り返して読む。
-		stmt := p.parseStatement()
+		stmt := p.parseStatement() //どんな種類の文かを判断し、そのstatementを返却する。ない場合は、nil
 		if stmt != nil {
 			program.Statements = append(program.Statements, stmt) //Statementsに追加する.
 			//これはルートノードにあるスライスだった。
