@@ -11,10 +11,10 @@ import (
 type Parser struct {
 	l              *lexer.Lexer //字句解析インスタンスへのポインタ
 	errors         []string
-	curToken       token.Token //現在のToken
-	peekToken      token.Token //次のToken
-	prefixParseFns map[token.TokenType]prefixParseFn
-	infixParseFns  map[token.TokenType]infixParseFn
+	curToken       token.Token                       //現在のToken
+	peekToken      token.Token                       //次のToken
+	prefixParseFns map[token.TokenType]prefixParseFn //前置のtoken.Typeから対応する関数を呼び出す
+	infixParseFns  map[token.TokenType]infixParseFn  //中置のtoken.Typeから対応する関数を呼び出す
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -26,6 +26,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn) //mapの初期化(makeは指定された型の、初期化された使用できるようにしたマップを返す)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)           //識別子型の構文解析関数の登録
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)         //整数リテラル型の構文解析関数の登録
+	p.registerPrefix(token.BANG, p.parsePrefixExpression)      //前置!の構文解析関数の登録
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)     //前置-の構文解析関数の登録
 
 	//２つのトークンを読み込む
 	p.nextToken()
@@ -168,8 +170,9 @@ const (
 
 //式の構文解析関数
 func (p *Parser) parseExpression(produce int) ast.Expression {
-	prefix := p.prefixParseFns[p.curToken.Type]
+	prefix := p.prefixParseFns[p.curToken.Type] //p.curToken.Typeの前置に関連つけられた構文解析関数があるかを確認
 	if prefix == nil {
+		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
 	}
 	leftExp := prefix()
@@ -189,4 +192,21 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	lit.Value = value
 
 	return lit
+}
+
+func (p *Parser) noPrefixParseFnError(t token.TokenType) {
+	msg := fmt.Sprintf("no prefix parse function for %s found", t)
+	p.errors = append(p.errors, msg) //構文解析器のerrorsに追加する。
+}
+
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expression := &ast.PrefixExpression{
+		Token:    p.curToken,
+		Operator: p.curToken.Literal,
+	}
+	p.nextToken()
+
+	expression.Right = p.parseExpression(PREFIX)
+
+	return expression
 }
