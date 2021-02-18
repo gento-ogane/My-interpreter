@@ -238,3 +238,55 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	}
 	return true //testはpass
 }
+
+func TestParsingInfixExpressions(t *testing.T) {
+	infixTests := []struct {
+		input      string
+		leftValue  int64
+		operator   string
+		rightValue int64
+	}{
+		{"5 + 5;", 5, "+", 5},
+		{"5 - 5;", 5, "-", 5},
+		{"5 * 5;", 5, "*", 5},
+		{"5 / 5;", 5, "/", 5},
+		{"5 > 5;", 5, ">", 5},
+		{"5 < 5;", 5, "<", 5},
+		{"5 == 5;", 5, "==", 5},
+		{"5 != 5;", 5, "!=", 5},
+	}
+	//一つ一つをテスト
+	for _, tt := range infixTests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does contain %d staments. got =%d\n", 1, len(program.Statements))
+		}
+		//program.Statementsに含まれる唯一の文が*ast.ExpressionStatementであることの確認
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement) //okはmapに含まれているかどうかの確認
+		if !ok {
+			t.Fatalf("program.Satatements[0] is not ast.ExpressionStatements. got =%T",
+				program.Statements[0])
+		}
+		//同上
+		exp, ok := stmt.Expression.(*ast.InfixExpression) //okはmapに含まれているかどうかの確認
+		if !ok {
+			t.Fatalf("exp is not *ast.InfixExpression. got =%T", stmt.Expression)
+		}
+		//正しい整数リテラルか判定
+		if !testIntegerLiteral(t, exp.Left, tt.leftValue) {
+			return
+		}
+		//識別子が正しいか確認
+		if exp.Operator != tt.operator {
+			t.Fatalf("exp.Operator is not '%s'. got=%s", tt.operator, exp.Operator)
+		}
+		//正しい整数リテラルか判定
+		if !testIntegerLiteral(t, exp.Right, tt.rightValue) {
+			return
+		}
+	}
+}
