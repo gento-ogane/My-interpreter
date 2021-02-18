@@ -169,7 +169,7 @@ const (
 )
 
 //式の構文解析関数
-func (p *Parser) parseExpression(produce int) ast.Expression {
+func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type] //p.curToken.Typeの前置に関連つけられた構文解析関数があるかを確認
 	if prefix == nil {
 		p.noPrefixParseFnError(p.curToken.Type)
@@ -201,12 +201,12 @@ func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 
 func (p *Parser) parsePrefixExpression() ast.Expression {
 	expression := &ast.PrefixExpression{
-		Token:    p.curToken,
-		Operator: p.curToken.Literal,
+		Token:    p.curToken,         //前置トークン
+		Operator: p.curToken.Literal, //前置文字列
 	}
-	p.nextToken()
+	p.nextToken() //トークンを次へ進める(前置の次の式へ)
 
-	expression.Right = p.parseExpression(PREFIX)
+	expression.Right = p.parseExpression(PREFIX) //前置の右、つまりトークンを進めたあとのものを式としてparseした値
 
 	return expression
 }

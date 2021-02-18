@@ -130,9 +130,9 @@ func (il *IntegerLiteral) String() string       { return il.Token.Literal }
 
 //前置演算子式
 type PrefixExpression struct {
-	Token    token.Token
-	Operator string
-	Right    Expression //右にかかる式(値)
+	Token    token.Token //前置トークン.ex「!」など
+	Operator string      //前置オペレーターの文字列
+	Right    Expression  //右にかかる式(値)
 }
 
 func (pe *PrefixExpression) expressionNode()      {}
