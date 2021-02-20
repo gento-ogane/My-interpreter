@@ -256,13 +256,13 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	return expression
 }
 
+//tokenを読み込んで、それの優先順位を把握する
 func (p *Parser) peekPrecedence() int {
 	if p, ok := precedences[p.peekToken.Type]; ok {
 		return p
 	}
 	return LOWEST
 }
-
 func (p *Parser) curPrecedence() int {
 	if p, ok := precedences[p.peekToken.Type]; ok {
 		return p
