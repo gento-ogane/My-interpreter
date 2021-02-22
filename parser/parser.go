@@ -78,7 +78,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 			program.Statements = append(program.Statements, stmt) //Statementsに追加する.
 			//これはルートノードにあるスライスだった。
 		}
-		p.nextToken()
+		p.nextToken() //token.EOFの次へ...(次のStatementへ)
 	}
 	return program
 }
@@ -129,7 +129,7 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.curToken} //ASTNodeの構築
 
-	stmt.Expression = p.parseExpression(LOWEST)
+	stmt.Expression = p.parseExpression(LOWEST) //最初はLOWESTで始める。
 
 	if p.peekTokenIs(token.SEMICOLON) { //セミコロンは省略可能REPLで楽になる。
 		p.nextToken()
@@ -196,7 +196,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
 	}
-	leftExp := prefix()
+	leftExp := prefix() //一回目は現在のトークンの構文解析関数をそのまま使用
 
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
@@ -205,7 +205,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		}
 		p.nextToken()
 
-		leftExp = infix(leftExp)
+		leftExp = infix(leftExp) //二回目以降は前回の結果を用いている。
 	}
 
 	return leftExp
