@@ -291,53 +291,58 @@ func TestParsingInfixExpressions(t *testing.T) {
 	}
 }
 
-func TestoOperatorPrecedenceParsing(t *testing.T) {
+func TestOperatorPrecedenceParsing(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected string
 	}{
 		{
 			"-a * b",
-			"((-a)*b)",
+			"((-a) * b)",
 		},
-		{"!-a",
+		{
+			"!-a",
 			"(!(-a))",
 		},
 		{
 			"a + b + c",
-			"((a+b)+c)",
+			"((a + b) + c)",
 		},
 		{
 			"a + b - c",
-			"((a+b)-c)",
+			"((a + b) - c)",
 		},
 		{
 			"a * b * c",
-			"((a*b)*c)",
+			"((a * b) * c)",
+		},
+		{
+			"a * b / c",
+			"((a * b) / c)",
 		},
 		{
 			"a + b / c",
-			"(a+(b/c))",
+			"(a + (b / c))",
 		},
 		{
 			"a + b * c + d / e - f",
-			"(((a+(b*c))+(d/e))-f)",
+			"(((a + (b * c)) + (d / e)) - f)",
 		},
 		{
 			"3 + 4; -5 * 5",
-			"(3 + 4)((-5)*5)",
+			"(3 + 4)((-5) * 5)",
 		},
 		{
 			"5 > 4 == 3 < 4",
-			"(( 5 > 4 ) == ( 3 < 4 ))",
+			"((5 > 4) == (3 < 4))",
 		},
 		{
 			"5 < 4 != 3 > 4",
-			"(( 5 < 4 ) != ( 3 > 4 ))",
+			"((5 < 4) != (3 > 4))",
 		},
 		{
 			"3 + 4 * 5 == 3 * 1 + 4 * 5",
-			"(3+ ( 4 * 5 ) == (( 3 * 1 ) + ( 4 * 5 ))",
+			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5))",
 		},
 	}
 
@@ -352,13 +357,12 @@ func TestoOperatorPrecedenceParsing(t *testing.T) {
 			t.Errorf("expected=%q, got=%q", tt.expected, actual)
 		}
 	}
-
 }
 
 func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 	ident, ok := exp.(*ast.Identifier)
 	if !ok {
-		t.Errorf("!exp not *ast.Identifier. got=%T", exp)
+		t.Errorf("exp not *ast.Identifier. got=%T", exp)
 		return false
 	}
 
@@ -368,8 +372,8 @@ func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 	}
 
 	if ident.TokenLiteral() != value {
-		t.Errorf("ident.TokenLiteral not %s. got=%s", value, ident.
-			TokenLiteral())
+		t.Errorf("ident.TokenLiteral not %s. got=%s", value,
+			ident.TokenLiteral())
 		return false
 	}
 	return true
@@ -392,12 +396,12 @@ func testLiteralExpression(
 	return false
 }
 
-func testInfixExpresison(t *testing.T, exp ast.Expression, left interface{},
+func testInfixExpression(t *testing.T, exp ast.Expression, left interface{},
 	operator string, right interface{}) bool {
 
 	opExp, ok := exp.(*ast.InfixExpression)
 	if !ok {
-		t.Errorf("exp is not ast.InfixExpression. got=%T", exp, exp)
+		t.Errorf("exp is not ast.InfixExpression. got=%T(%s)", exp, exp)
 		return false
 	}
 
@@ -406,7 +410,7 @@ func testInfixExpresison(t *testing.T, exp ast.Expression, left interface{},
 	}
 
 	if opExp.Operator != operator {
-		t.Errorf("exp.Operaotr is not '%s'. got=%q", operator, opExp.Operator)
+		t.Errorf("exp.Operator is not '%s'. got=%q", operator, opExp.Operator)
 		return false
 	}
 

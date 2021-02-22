@@ -203,6 +203,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		if infix == nil {
 			return leftExp
 		}
+
 		p.nextToken()
 
 		leftExp = infix(leftExp) //二回目以降は前回の結果を用いている。
@@ -252,7 +253,6 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	precedences := p.curPrecedence()
 	p.nextToken()
 	expression.Right = p.parseExpression(precedences)
-
 	return expression
 }
 
@@ -264,7 +264,7 @@ func (p *Parser) peekPrecedence() int {
 	return LOWEST
 }
 func (p *Parser) curPrecedence() int {
-	if p, ok := precedences[p.peekToken.Type]; ok {
+	if p, ok := precedences[p.curToken.Type]; ok {
 		return p
 	}
 	return LOWEST
