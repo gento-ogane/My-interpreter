@@ -24,7 +24,9 @@ func Eval(node ast.Node) object.Object {
 		return &object.Integer{Value: node.Value} //オブジェクトシステムの整数型を返す
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value) //オブジェクトシステムの真偽値型を返す
-
+	case *ast.PrefixExpression:
+		right := Eval(node.Right)
+		return evalPrefixExpression(node.Operator, right)
 	}
 	return nil
 }
@@ -44,4 +46,38 @@ func nativeBoolToBooleanObject(input bool) *object.Boolean {
 		return TRUE
 	}
 	return FALSE
+}
+
+//前置演算子の評価関数
+func evalPrefixExpression(operator string, right object.Object) object.Object {
+	switch operator {
+	case "!":
+		return evalBangOperatorExpression(right)
+	case "-":
+		return evalMinusOperatorExpression(right)
+	default:
+		return NULL
+	}
+}
+
+//right(右オペランド)の反転した値を返却する。
+func evalBangOperatorExpression(right object.Object) object.Object {
+	switch right {
+	case TRUE:
+		return FALSE
+	case FALSE:
+		return TRUE
+	case NULL:
+		return TRUE
+	default:
+		return FALSE
+	}
+}
+
+func evalMinusOperatorExpression(right object.Object) object.Object {
+	if right.Type() != object.INTEGER_OBJ { //オペランドが整数かどうかのcheck
+		return NULL
+	}
+	value := right.(*object.Integer).Value
+	return &object.Integer{Value: -value} //-1がかかった値を返却する
 }
