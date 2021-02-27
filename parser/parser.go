@@ -98,7 +98,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return p.parseExpressionStatement()
+		return p.parseExpressionStatement() //letでもreturnでもなかったら
 	}
 }
 
@@ -208,9 +208,9 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
 	}
-	leftExp := prefix() //一回目は現在のトークンの構文解析関数をそのまま使用
+	leftExp := prefix() //一回目は現在のトークンに結びついた前置構文解析関数を実行
 
-	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() { //次の演算子/トークンの左結合力が現在の右結合力よりも高いかを判定する
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
