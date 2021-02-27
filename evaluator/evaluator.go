@@ -19,6 +19,11 @@ func Eval(node ast.Node) object.Object {
 		return evalStatements(node.Statements) //文のスライスを分解(一つずつ)して、Evalを呼び出している
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
+	case *ast.BlockStatement:
+		return evalStatements(node.Statements)
+	case *ast.IfExpression:
+		return evalIfExpression(node)
+
 	//式
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value} //オブジェクトシステムの整数型を返す
@@ -95,7 +100,6 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 		return nativeBoolToBooleanObject(left == right)
 	case operator == "!=":
 		return nativeBoolToBooleanObject(left != right)
-
 	default:
 		return NULL
 	}
@@ -125,4 +129,31 @@ func evalIntegerInfixExpression(operator string, left, right object.Object) obje
 	default:
 		return NULL
 	}
+}
+
+func evalIfExpression(ie *ast.IfExpression) object.Object {
+	condition := Eval(ie.Condition)
+
+	if isTruthy(condition) {
+		return Eval(ie.Consequence) //真文
+	} else if ie.Alternative != nil {
+		return Eval(ie.Alternative) //else文
+	} else {
+		return NULL
+	}
+}
+
+//null,false以外はtrue
+func isTruthy(obj object.Object) bool {
+	switch obj {
+	case NULL:
+		return false
+	case TRUE:
+		return true
+	case FALSE:
+		return false
+	default:
+		return true
+	}
+
 }
