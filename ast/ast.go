@@ -250,7 +250,7 @@ func (fl *FunctionLiteral) String() string {
 type CallExpression struct {
 	Token     token.Token
 	Function  Expression   //Identifier or FunctionLiteral
-	Arguments []Expression //引数
+	Arguments []Expression //引数たち
 }
 
 func (ce *CallExpression) expressionNode()      {}
