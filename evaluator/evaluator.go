@@ -263,11 +263,13 @@ func evalIdentifier(
 	node *ast.Identifier,
 	env *object.Environment,
 ) object.Object {
-	val, ok := env.Get(node.Value)
-	if !ok {
-		return newError("identifier not found: " + node.Value)
+	if val, ok := env.Get(node.Value); ok {
+		return val
 	}
-	return val
+	if builtin, ok := builtins[node.Value]; ok { //与えられた識別子が現在の環境で値に束縛されていない時、フォールバックして組み込み関数を探す
+		return builtin
+	}
+	return newError("identifier not found: " + node.Value)
 }
 
 //引数と環境を渡し、引数の値を計算したスライスを得る。ex) 5+5 => 10
@@ -287,15 +289,18 @@ func evalExpressions(
 	return result
 }
 
+//??
 func applyFunction(fn object.Object, args []object.Object) object.Object {
-	function, ok := fn.(*object.Function)
-	if !ok {
+	switch fn := fn.(type) {
+	case *object.Function:
+		extendEnv := extendFunctionEnv(fn, args)
+		evaluated := Eval(fn.Body, extendEnv)
+		return unwrapReturnValue(evaluated)
+	case *object.Builtin:
+		return fn.Fn(args...)
+	default:
 		return newError("not a function: %s", fn.Type())
 	}
-
-	extendEnv := extendFunctionEnv(function, args)
-	evaluated := Eval(function.Body, extendEnv)
-	return unwrapReturnValue(evaluated)
 }
 
 func extendFunctionEnv(
@@ -331,5 +336,4 @@ func evalStringInfixExpression(
 	leftVal := left.(*object.String).Value
 	rightVal := right.(*object.String).Value
 	return &object.String{Value: leftVal + rightVal}
-
 }
