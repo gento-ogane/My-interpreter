@@ -57,6 +57,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	//式
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value} //オブジェクトシステムの整数型を返す
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
+
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value) //オブジェクトシステムの真偽値型を返す
 	case *ast.PrefixExpression:

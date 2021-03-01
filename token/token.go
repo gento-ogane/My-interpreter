@@ -14,6 +14,8 @@ const (
 	IDENT = "IDENT"
 	INT   = "INT"
 
+	STRING = "STRING"
+
 	//演算子
 	ASSIGN   = "="
 	PLUS     = "+"
