@@ -1,12 +1,13 @@
 package object
 
+//拡張する対象の環境へのポインタ
 func NewEnclosedEnvironment(outer *Environment) *Environment {
 	env := NewEnvironment()
-	env.outer = outer
+	env.outer = outer //引数で受け取った環境を外側の環境として、envを包む。
 	return env
 }
 
-//環境の追加
+//環境の追加(string:Objectのハッシュマップ)
 func NewEnvironment() *Environment {
 	s := make(map[string]Object)
 	return &Environment{store: s}
@@ -19,8 +20,8 @@ type Environment struct {
 
 func (e *Environment) Get(name string) (Object, bool) {
 	obj, ok := e.store[name]
-	if !ok && e.outer != nil {
-		obj, ok = e.outer.Get(name)
+	if !ok && e.outer != nil { //この環境にはなく、この環境を包み込む外側の環境がある場合
+		obj, ok = e.outer.Get(name) //外側の環境へ参照を行う。
 	}
 	return obj, ok
 }

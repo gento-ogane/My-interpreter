@@ -21,8 +21,8 @@ const (
 )
 
 type Object interface {
-	Type() ObjectType
-	Inspect() string
+	Type() ObjectType //オブジェクトのタイプ
+	Inspect() string  //文字を返す。ぱっと見で中身がわかるため
 }
 
 //整数

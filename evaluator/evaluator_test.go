@@ -30,11 +30,12 @@ func TestIntegerExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated := testEval(tt.input) //Evalしたあとに返却されるobject.Objectを代入
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
 
+//inputを渡すと、Eval実行まで一気にやってくれる。戻り値はObject
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
@@ -44,12 +45,15 @@ func testEval(input string) object.Object {
 	return Eval(program, env)
 }
 
+//整数:object.ObjectのValueについてアサーションを設けている。
 func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
-	result, ok := obj.(*object.Integer)
+	result, ok := obj.(*object.Integer) //型アサーション。objectがInteger型かどうか
+	//Integerではない場合
 	if !ok {
 		t.Errorf("object is not Integer. got=%T (%+v)", obj, obj)
 		return false
 	}
+	//Valueが異なった場合
 	if result.Value != expected {
 		t.Errorf("object has wrong value. got=%d,want=%d",
 			result.Value, expected)
@@ -58,6 +62,7 @@ func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 	return true
 }
 
+//真偽値リテラルのテスト
 func TestBooleanExpression(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -90,14 +95,14 @@ func TestBooleanExpression(t *testing.T) {
 	}
 }
 
-//objがBooleanか、Valueが同じか
+//真偽:object.ObjectのValueについてアサーションを設けている。
 func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
-	result, ok := obj.(*object.Boolean)
+	result, ok := obj.(*object.Boolean) //型アサーション。真偽オブジェクトがどうか
 	if !ok {
 		t.Errorf("object is not Boolean. got=%T (%+v)", obj, obj)
 		return false
 	}
-	if result.Value != expected {
+	if result.Value != expected { //値が同じかどうか
 		t.Errorf("object has wrong value. got=%t,want=%t",
 			result.Value, expected)
 		return false
@@ -105,7 +110,7 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 	return true
 }
 
-//前置演算子の機能テスト
+//前置演算子！の機能テスト
 func TestBangOperator(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -271,7 +276,7 @@ func TestLetStatements(t *testing.T) {
 
 }
 
-//クロージャのテスト,正しいパラメータと正しい本体を持った正しい*object.Functionが返されることを検証する
+//関数リテラルを評価した時に、正しいパラメータと正しい本体を持った正しい*object.Functionが返されることを検証する
 func TestFunctionObject(t *testing.T) {
 	input := "fn(x) { x + 2; };"
 
@@ -297,6 +302,7 @@ func TestFunctionObject(t *testing.T) {
 	}
 }
 
+//関数の呼び出しテスト
 func TestFunctionApplication(t *testing.T) {
 	tests := []struct {
 		input    string

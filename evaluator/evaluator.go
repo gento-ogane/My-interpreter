@@ -14,10 +14,13 @@ var (
 )
 
 func Eval(node ast.Node, env *object.Environment) object.Object {
+	//Nodeのタイプによってどのeval関数を呼び出すのか場合分け
 	switch node := node.(type) {
-	//文
+
+	//文の配列を受け取った時(初回)
 	case *ast.Program:
 		return evalProgram(node, env) //文のスライスを分解(一つずつ)して、Evalを呼び出している
+
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
 	case *ast.BlockStatement:
@@ -30,44 +33,53 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return val
 		}
 		return &object.ReturnValue{Value: val}
+
 	case *ast.LetStatement:
 		val := Eval(node.Value, env)
 		if isError(val) {
 			return val
 		}
-		env.Set(node.Name.Value, val)
+		env.Set(node.Name.Value, val) //環境に新しく変数を追加する。
+	//識別子の場合
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
+
+	//関数を認識する
 	case *ast.FunctionLiteral:
 		params := node.Parameters
 		body := node.Body
 		return &object.Function{Parameters: params, Env: env, Body: body}
+
+	//関数を呼び出す
 	case *ast.CallExpression:
-		function := Eval(node.Function, env)
+		function := Eval(node.Function, env) //関数を認識し、関数objectを得る。
 		if isError(function) {
 			return function
 		}
-		args := evalExpressions(node.Arguments, env) //引数と環境を渡し、引数の値を計算したスライスを得る。ex) 5+5 => 10
-		if len(args) == 1 && isError(args[0]) {
+		args := evalExpressions(node.Arguments, env) //引数と環境を渡し、引数の値を計算したobjectスライスを得る。ex) 5+5 => 10
+		if len(args) == 1 && isError(args[0]) {      //エラーがある場合,args[0]に格納されている。(objectインスタンスを新しく作成するため)
 			return args[0]
 		}
 
-		return applyFunction(function, args)
+		return applyFunction(function, args) //関数Objectと引数Objectを用い、拡張環境を作成してそこで実行する。
 
 	//式
 	case *ast.IntegerLiteral:
-		return &object.Integer{Value: node.Value} //オブジェクトシステムの整数型を返す
+		return &object.Integer{Value: node.Value} //オブジェクトシステムの整数型を返す。Valueは受け取ったNodeのValueを入れている。
+
 	case *ast.StringLiteral:
-		return &object.String{Value: node.Value}
+		return &object.String{Value: node.Value} //オブジェクトシステムの文字型を返す。Valueは受け取ったNodeのValueを入れている。
 
 	case *ast.Boolean:
-		return nativeBoolToBooleanObject(node.Value) //オブジェクトシステムの真偽値型を返す
-	case *ast.PrefixExpression:
-		right := Eval(node.Right, env)
+		return nativeBoolToBooleanObject(node.Value) //オブジェクトシステムの真偽値型を返す。Valueは受け取ったNodeのValueを入れている。
+
+	case *ast.PrefixExpression: //前置演算式。Token(type),Operator(string),right(Expression)から成る
+		right := Eval(node.Right, env) //まず右の式を評価してObjectを得る。
 		if isError(right) {
 			return right
 		}
-		return evalPrefixExpression(node.Operator, right)
+		return evalPrefixExpression(node.Operator, right) //オペレータと右の値(上で評価したObject)からObjectを返却する。
+
 	case *ast.InfixExpression:
 		left := Eval(node.Left, env)
 		if isError(left) {
@@ -82,21 +94,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	return nil
 }
 
-//func evalStatements(stmts []ast.Statement) object.Object {
-//	var result object.Object
-//
-//	for _, statement := range stmts {
-//		result = Eval(statement, env)
-//
-//		if returnValue, ok := result.(*object.ReturnValue); ok {
-//			return returnValue.Value
-//		}
-//	}
-//
-//	return result
-//}
-
-func nativeBoolToBooleanObject(input bool) *object.Boolean {
+func nativeBoolToBooleanObject(input bool) *object.Boolean { //TrueとFalseのオブジェクトを参照する。
 	if input {
 		return TRUE
 	}
@@ -107,9 +105,9 @@ func nativeBoolToBooleanObject(input bool) *object.Boolean {
 func evalPrefixExpression(operator string, right object.Object) object.Object {
 	switch operator {
 	case "!":
-		return evalBangOperatorExpression(right)
+		return evalBangOperatorExpression(right) //right(右オペランド)の反転した値をValueに入れたobject.Objectを返却する
 	case "-":
-		return evalMinusPrefixOperatorExpression(right)
+		return evalMinusPrefixOperatorExpression(right) //right(右オペランド)の値に-1をかけた値をValueに入れたobject.Objectを返却する
 	default:
 		return newError("unknown operator: %s%s", operator, right.Type())
 	}
@@ -117,6 +115,7 @@ func evalPrefixExpression(operator string, right object.Object) object.Object {
 
 //right(右オペランド)の反転した値を返却する。
 func evalBangOperatorExpression(right object.Object) object.Object {
+	//ここでのTRUEやFALSEはobject型。参照している。
 	switch right {
 	case TRUE:
 		return FALSE
@@ -140,12 +139,16 @@ func evalMinusPrefixOperatorExpression(right object.Object) object.Object {
 
 func evalInfixExpression(operator string, left, right object.Object) object.Object {
 	switch {
+	//オペランド(演算対象)として、整数値が入れられた場合
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		return evalIntegerInfixExpression(operator, left, right)
+
+	//オペランドとして、真偽値が入れられた場合
 	case operator == "==":
 		return nativeBoolToBooleanObject(left == right)
 	case operator == "!=":
 		return nativeBoolToBooleanObject(left != right)
+
 	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
 		return evalStringInfixExpression(operator, left, right)
 
@@ -158,6 +161,7 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 	}
 }
 
+//中値演算子式。オペランドとして整数が入れられた場合。
 func evalIntegerInfixExpression(operator string, left, right object.Object) object.Object {
 	leftVal := left.(*object.Integer).Value
 	rightVal := right.(*object.Integer).Value
@@ -263,7 +267,7 @@ func evalIdentifier(
 	node *ast.Identifier,
 	env *object.Environment,
 ) object.Object {
-	if val, ok := env.Get(node.Value); ok {
+	if val, ok := env.Get(node.Value); ok { //環境から識別子をキーとしてGetする、ない場合はエラーが出る(そんな変数定義れてないよ！)
 		return val
 	}
 	if builtin, ok := builtins[node.Value]; ok { //与えられた識別子が現在の環境で値に束縛されていない時、フォールバックして組み込み関数を探す
@@ -282,35 +286,36 @@ func evalExpressions(
 	for _, e := range exps {
 		evaluated := Eval(e, env)
 		if isError(evaluated) { //評価の中止
-			return []object.Object{evaluated}
+			return []object.Object{evaluated} //evaluatedはエラーobjectなので、それを返却する。
 		}
 		result = append(result, evaluated)
 	}
 	return result
 }
 
-//??
+//関数Objectと引数Objectを用い、拡張環境を作成してそこで実行する。
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 	switch fn := fn.(type) {
 	case *object.Function:
-		extendEnv := extendFunctionEnv(fn, args)
-		evaluated := Eval(fn.Body, extendEnv)
-		return unwrapReturnValue(evaluated)
+		extendEnv := extendFunctionEnv(fn, args) //関数が保持する環境に包まれた新環境で変数を束縛し、その環境を返す。
+		evaluated := Eval(fn.Body, extendEnv)    //その関数のBodyと環境を入れ、Evalする！
+		return unwrapReturnValue(evaluated)      //returnの場合、アンラップしないとBlockの外まできて評価を中止してしまう。
 	case *object.Builtin:
 		return fn.Fn(args...)
-	default:
+	default: //objectが手に入っていない場合はエラーを発生
 		return newError("not a function: %s", fn.Type())
 	}
 }
 
+//拡張された環境の作成
 func extendFunctionEnv(
 	fn *object.Function,
 	args []object.Object,
 ) *object.Environment {
-	env := object.NewEnclosedEnvironment(fn.Env)
+	env := object.NewEnclosedEnvironment(fn.Env) //関数独自に持つ環境を外側にもつ環境を作成(環境を拡張する。)
 
 	for paramIdx, param := range fn.Parameters {
-		env.Set(param.Value, args[paramIdx])
+		env.Set(param.Value, args[paramIdx]) //拡張した環境にparams(引数)変数を保存する。
 	}
 
 	return env
