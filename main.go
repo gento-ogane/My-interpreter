@@ -12,8 +12,25 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Hello %s! This is the Monkey programming language!\n\n",
+	fmt.Printf("Welcome %s! This is the げんまる programming language!\n\n",
 		user.Username)
-	fmt.Printf("Feel free to type in command\n")
+	fmt.Println(`
+          #  # #       #                  #                         
+  #       #  # #       #                  #           #########     
+  #       #           ##                  #                 ##      
+ ##       #           #             ############           ##       
+ #   ##########      ##                   #               ##        
+ #        #          #                    #              ##         
+ #        #          #              ############        #######     
+ #        #         ## ###                #            ##     ##    
+ #        #         # #   #               #           ##       ##   
+ #        #         ##    #               #          ##         #   
+ # #      #        ##     #          ######             ###     #   
+ ##      ##        #      #    #    #     ###          #  ##    #   
+  #      #         #      #   ##    #     # ###        #   #   ##   
+        ##        ##      #  ##     #    ##   ##       ##  #  ##    
+       ##         #        ###       #####              #######     
+                                                                    
+`)
 	repl.Start(os.Stdin, os.Stdout)
 }
