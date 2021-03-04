@@ -94,8 +94,24 @@ var builtins = map[string]*object.Builtin{
 			copy(newElements, arr.Elements)
 			newElements[length] = args[1] //第二引数を最後尾に持ってくる
 			return &object.Array{Elements: newElements}
-
-			return NULL
+		},
+	},
+	"pop": &object.Builtin{
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) != 1 {
+				return newError("wrong number of arguments. got=%d,want=0", len(args))
+			}
+			if args[0].Type() != object.ARRAY_OBJ {
+				return newError("argument to `pop` must be ARRAY, got %s", args[0].Type())
+			}
+			arr := args[0].(*object.Array)
+			length := len(arr.Elements)
+			if length > 0 {
+				last := arr.Elements[length-1]
+				arr.Elements = arr.Elements[0 : length-1]
+				return last
+			}
+			return newError("array to `pop` must be over 1 length, got %d", length)
 		},
 	},
 	"puts": &object.Builtin{
