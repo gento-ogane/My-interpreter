@@ -48,6 +48,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
+	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn) //mapの初期化(makeは指定された型の、初期化された使用できるようにしたマップを返す)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -451,4 +452,32 @@ func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
 		return nil
 	}
 	return exp
+}
+
+//ハッシュリテラルの構文解析。
+func (p *Parser) parseHashLiteral() ast.Expression {
+	hash := &ast.HashLiteral{Token: p.curToken}
+	hash.Pairs = make(map[ast.Expression]ast.Expression)
+
+	for !p.peekTokenIs(token.RBRACE) { //空ハッシュじゃなかったら
+		p.nextToken()
+		key := p.parseExpression(LOWEST) //keyを解析
+
+		if !p.expectPeek(token.COLON) { //keyの次に:がなかったらエラー
+			return nil
+		}
+
+		p.nextToken()
+		value := p.parseExpression(LOWEST) //valueを解析
+
+		hash.Pairs[key] = value
+
+		if !p.peekTokenIs(token.RBRACE) && !p.expectPeek(token.COMMA) { //valueの後に}がなくて、
+			return nil
+		}
+	}
+	if !p.expectPeek(token.RBRACE) { //末尾に}がないならエラー
+		return nil
+	}
+	return hash
 }
