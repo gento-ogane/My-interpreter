@@ -69,7 +69,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return elements[0]
 		}
 		return &object.Array{Elements: elements}
-	case *ast.IndexExpression:
+
+	case *ast.IndexExpression: //添字演算子の構文木
 		left := Eval(node.Left, env)
 		if isError(left) {
 			return left
@@ -367,6 +368,8 @@ func evalIndexExpression(left, index object.Object) object.Object {
 	switch {
 	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
 		return evalArrayIndexExpression(left, index)
+	case left.Type() == object.HASH_OBJ:
+		return evalHashIndexExpression(left, index)
 	default:
 		return newError("index operator not supported: %s", left.Type())
 	}
@@ -408,4 +411,20 @@ func evalHashLiteral(
 		pairs[hashed] = object.HashPair{Key: key, Value: value}
 	}
 	return &object.Hash{Pairs: pairs}
+}
+
+func evalHashIndexExpression(hash, index object.Object) object.Object {
+	hashObject := hash.(*object.Hash)
+
+	key, ok := index.(object.Hashable) //添字として使うものがHashableである必要がある
+	if !ok {
+		return newError("unusable as hash key: %s", index.Type())
+	}
+
+	pair, ok := hashObject.Pairs[key.HashKey()] //keyからPairを取得
+	if !ok {
+		return NULL
+	}
+	return pair.Value //PairのValueを返す
+
 }
