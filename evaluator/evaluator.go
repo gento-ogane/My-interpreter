@@ -52,6 +52,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 	//関数を呼び出す
 	case *ast.CallExpression:
+		if node.Function.TokenLiteral() == "quote" {
+			return quote(node.Arguments[0])
+		}
 		function := Eval(node.Function, env) //関数を認識し、関数objectを得る。
 		if isError(function) {
 			return function
