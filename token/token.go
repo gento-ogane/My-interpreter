@@ -52,6 +52,7 @@ const (
 	IF       = "IF"
 	ELSE     = "ELSE"
 	RETURN   = "RETURN"
+	CLASS    = "CLASS"
 )
 
 var keywords = map[string]TokenType{
@@ -63,6 +64,7 @@ var keywords = map[string]TokenType{
 	"if":     IF,
 	"else":   ELSE,
 	"return": RETURN,
+	"class":  CLASS,
 }
 
 //渡された識別子がキーワードかどうかを確認、違うのならばTokenType定数を返す。

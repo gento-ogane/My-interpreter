@@ -247,6 +247,33 @@ func (fl *FunctionLiteral) String() string {
 	return out.String()
 }
 
+type FunctionStatement struct {
+	Token           token.Token
+	Name            *Identifier
+	FunctionLiteral *FunctionLiteral
+}
+
+func (f *FunctionStatement) statementNode()       {}
+func (f *FunctionStatement) TokenLiteral() string { return f.Token.Literal }
+
+func (f *FunctionStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("fn ")
+	out.WriteString(f.Name.String())
+	//params := []strings{}
+	//for _, p := range f.FunctionLiteral.Parameters {
+	//}
+	out.WriteString(" (")
+	//out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString("{ ")
+	out.WriteString(f.FunctionLiteral.Body.String())
+	out.WriteString(" }")
+	//
+	return out.String()
+}
+
 type CallExpression struct {
 	Token     token.Token
 	Function  Expression   //Identifier or FunctionLiteral
@@ -356,6 +383,51 @@ func (we *WhileExpression) String() string {
 	out.WriteString(we.Condition.String())
 	out.WriteString(" ")
 	out.WriteString(we.Consequence.String())
+
+	return out.String()
+}
+
+type ClassLiteral struct {
+	Token   token.Token //'class'トークン
+	Name    string
+	Members []*LetStatement //識別子のスライス
+	Methods map[string]*FunctionStatement
+	Body    *BlockStatement
+	Block   *BlockStatement //mainly used for debugging purpose
+}
+
+func (c *ClassLiteral) expressionNode()      {}
+func (c *ClassLiteral) TokenLiteral() string { return c.Token.Literal }
+
+func (c *ClassLiteral) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(c.TokenLiteral() + " ")
+	out.WriteString(c.Name)
+
+	out.WriteString("{ ")
+	out.WriteString(c.Block.String())
+	out.WriteString("} ")
+
+	return out.String()
+}
+
+type ClassStatement struct {
+	Token        token.Token
+	Name         *Identifier //Class name
+	ClassLiteral *ClassLiteral
+}
+
+func (c *ClassStatement) statementNode()       {}
+func (c *ClassStatement) TokenLiteral() string { return c.Token.Literal }
+func (c *ClassStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(c.Token.Literal + " ")
+	out.WriteString(c.Name.Value)
+	out.WriteString("{ ")
+	out.WriteString(c.ClassLiteral.Block.String())
+	out.WriteString(" }")
 
 	return out.String()
 }

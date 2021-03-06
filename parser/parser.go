@@ -103,6 +103,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseLetStatement()
 	case token.RETURN:
 		return p.parseReturnStatement()
+	case token.CLASS:
+		return p.parseClassStatement()
 	default:
 		return p.parseExpressionStatement() //letでもreturnでもなかったら
 	}
@@ -232,6 +234,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 }
 
 //整数リテラルの構文解析関数
+//トークンのリテラルをintにparseして、&ast.IntegerLiteralのvalueに入れる。
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
@@ -251,6 +254,7 @@ func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 	p.errors = append(p.errors, msg) //構文解析器のerrorsに追加する。
 }
 
+//rightには、expressionをparseした値を入れる。()
 func (p *Parser) parsePrefixExpression() ast.Expression {
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,         //前置トークン
@@ -289,6 +293,7 @@ func (p *Parser) curPrecedence() int {
 	return LOWEST
 }
 
+//現在の値がBooleanでTRUEガFLASEが判定し、BOOLEANそのままトークンの値に使用
 func (p *Parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: p.curToken, Value: p.curTokenIs(token.TRUE)}
 }
@@ -503,4 +508,41 @@ func (p *Parser) parseWhileExpression() ast.Expression {
 	expression.Consequence = p.parseBlockStatement() //curTokenが{に来た時にする
 
 	return expression
+}
+
+func (p *Parser) parseClassLiteral() ast.Expression {
+	cls := &ast.ClassLiteral{
+		Token:   p.curToken,
+		Members: make([]*ast.LetStatement, 0),
+		Methods: make(map[string]*ast.FunctionStatement),
+	}
+	p.nextToken()
+
+	if !p.curTokenIs(token.LBRACE) {
+		return nil
+	}
+	cls.Block = p.parseBlockStatement()
+	for _, statement := range cls.Block.Statements {
+		switch s := statement.(type) {
+		case *ast.LetStatement:
+			cls.Members = append(cls.Members, s)
+		default:
+			return nil
+		}
+	}
+	fmt.Println(cls.String())
+
+	return cls
+}
+
+func (p *Parser) parseClassStatement() *ast.ClassStatement { //CLASStokenから始まる
+	stmt := &ast.ClassStatement{Token: p.curToken}
+	p.nextToken()
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	stmt.ClassLiteral = p.parseClassLiteral().(*ast.ClassLiteral)
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+	stmt.ClassLiteral.Name = stmt.Name.Value
+	return stmt
 }
