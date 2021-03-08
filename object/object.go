@@ -22,6 +22,7 @@ const (
 	ARRAY_OBJ        = "ARRAY"
 	HASH_OBJ         = "HASH"
 	QUOTE_OBJ        = "QUOTE"
+	CLASS_OBJ        = "CLASS"
 )
 
 type Object interface {
@@ -194,3 +195,15 @@ func (q *Quote) Type() ObjectType { return QUOTE_OBJ }
 func (q *Quote) Inspect() string {
 	return "QUOTE(" + q.Node.String() + ")"
 }
+
+type Class struct {
+	Name    string
+	Parent  *Class
+	Members []*ast.LetStatement
+	Methods map[string]*Function
+	Env     *Environment
+}
+
+func (c *Class) Inspect() string { return "<class:" + c.Name + ">" }
+
+func (c *Class) Type() ObjectType { return CLASS_OBJ }

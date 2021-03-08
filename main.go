@@ -14,7 +14,7 @@ func main() {
 	}
 	fmt.Printf("Welcome %s! This is the げんまる programming language!\n\n",
 		user.Username)
-	fmt.Println(`
+	fmt.Printf(`
           #  # #       #                  #                         
   #       #  # #       #                  #           #########     
   #       #           ##                  #                 ##      
