@@ -431,3 +431,39 @@ func (c *ClassStatement) String() string {
 
 	return out.String()
 }
+
+//newトークンとクラス
+type NewExpression struct {
+	Token token.Token //newToken
+	Class Expression  //class
+}
+
+func (n *NewExpression) expressionNode()      {}
+func (n *NewExpression) TokenLiteral() string { return n.Token.Literal }
+func (n *NewExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(n.TokenLiteral() + " ")
+	out.WriteString(n.Class.String())
+	out.WriteString("(")
+	out.WriteString(") ")
+
+	return out.String()
+}
+
+// type MethodCallExpression struct {
+// 	Token  token.Token
+// 	Object Expression
+// 	Call   Expression
+// }
+
+// func (mc *MethodCallExpression) expressionNode()      {}
+// func (mc *MethodCallExpression) TokenLiteral() string { return mc.Token.Literal }
+// func (mc *MethodCallExpression) String() string {
+// 	var out bytes.Buffer
+// 	out.WriteString(mc.Object.String())
+// 	out.WriteString(".")
+// 	out.WriteString(mc.Call.String())
+
+// 	return out.String()
+// }

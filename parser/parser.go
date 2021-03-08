@@ -50,6 +50,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 	p.registerPrefix(token.WHILE, p.parseWhileExpression)
+	p.registerPrefix(token.NEW, p.parseNewExpression)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn) //mapの初期化(makeは指定された型の、初期化された使用できるようにしたマップを返す)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -62,6 +63,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression) //添字演算式の構文解析関数
+	// p.registerInfix(token.DOT, p.parseMethodCallExpression)
 
 	//２つのトークンを読み込む
 	p.nextToken()
@@ -510,6 +512,7 @@ func (p *Parser) parseWhileExpression() ast.Expression {
 	return expression
 }
 
+//class宣言の{}部分のparse
 func (p *Parser) parseClassLiteral() ast.Expression {
 	cls := &ast.ClassLiteral{
 		Token:   p.curToken,
@@ -535,6 +538,7 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 	return cls
 }
 
+//class文のparse
 func (p *Parser) parseClassStatement() *ast.ClassStatement { //CLASStokenから始まる
 	stmt := &ast.ClassStatement{Token: p.curToken}
 	p.nextToken()
@@ -546,3 +550,54 @@ func (p *Parser) parseClassStatement() *ast.ClassStatement { //CLASStokenから�
 	stmt.ClassLiteral.Name = stmt.Name.Value
 	return stmt
 }
+
+//new
+func (p *Parser) parseNewExpression() ast.Expression {
+	newExp := &ast.NewExpression{Token: p.curToken}
+
+	p.nextToken()
+	exp := p.parseExpression(LOWEST)
+
+	call, ok := exp.(*ast.CallExpression)
+	if !ok {
+		return nil
+	}
+
+	newExp.Class = call.Function
+
+	return newExp
+}
+
+// func (p *Parser) parseMethodCallExpression(obj ast.Expression) ast.Expression {
+// 	methodCall := &ast.MethodCallExpression{Token: p.curToken, Object: obj}
+// 	p.nextToken()
+
+// 	name := p.parseIdentifier()
+// 	if !p.peekTokenIs(token.LPAREN) {
+// 		//methodCall.Call = p.parseExpression(LOWEST)
+// 		//Note: here the precedence should not be `LOWEST`, or else when parsing below line:
+// 		//     logger.LDATE + 1 ==> logger.(LDATE + 1)
+// 		methodCall.Call = p.parseExpression(CALL)
+// 	} else {
+// 		p.nextToken()
+// 		methodCall.Call = p.parseCallExpression(name)
+// 	}
+
+// 	return methodCall
+// }
+
+// //引数なし。new Classname()
+// func (p *Parser) parseNewExpression() ast.Expression {
+// 	newExp := &ast.NewExpression{Token: p.curToken}
+
+// 	p.nextToken()
+// 	exp := p.parseExpression(LOWEST) //??
+
+// 	call, ok := exp.(*ast.CallExpression)
+// 	if !ok {
+// 		return nil
+// 	}
+
+// 	newExp.Class = call.Function //ここで、クラス名"classname"を入れている。
+// 	return newExp
+// }

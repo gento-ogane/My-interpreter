@@ -103,8 +103,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalClassStatement(node, env)
 	case *ast.ClassLiteral:
 		return evalClassLiteral(node, env)
-	// case *ast.NewExpression:
-	// 	return evalNewExpression(node, env)
+	case *ast.NewExpression:
+		return evalNewExpression(node, env)
 
 	case *ast.PrefixExpression: //前置演算式。Token(type),Operator(string),right(Expression)から成る
 		right := Eval(node.Right, env) //まず右の式を評価してObjectを得る。
@@ -463,7 +463,6 @@ func evalClassLiteral(c *ast.ClassLiteral, env *object.Environment) object.Objec
 		Methods: make(map[string]*object.Function, len(c.Methods)),
 	}
 
-	create a new Class scope
 	newScope := object.NewEnclosedEnvironment(env)
 	for _, member := range c.Members {
 		Eval(member, newScope) //拡張環境先で変数を入れる。
@@ -480,7 +479,20 @@ func evalClassStatement(c *ast.ClassStatement, env *object.Environment) object.O
 	clsObj := evalClassLiteral(c.ClassLiteral, env)
 
 	env.Set(c.Name.Value, clsObj) //環境にセットする
-	fmt.Printf(clsObj.Inspect())
 
 	return NULL
+}
+
+func evalNewExpression(n *ast.NewExpression, env *object.Environment) object.Object {
+	class := Eval(n.Class, env) //そもそもクラス文ってExpressionなのか？
+
+	clsObj, ok := class.(*object.Class)
+	if !ok {
+		fmt.Println("error2")
+	}
+	fmt.Printf(clsObj.Inspect())
+
+	instance := &object.Instance{Class: clsObj, Env: env} //閉じた環境にclsObjを入れる。
+
+	return instance
 }

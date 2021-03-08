@@ -23,6 +23,7 @@ const (
 	HASH_OBJ         = "HASH"
 	QUOTE_OBJ        = "QUOTE"
 	CLASS_OBJ        = "CLASS"
+	INSTANCE_OBJ     = "INSTANCE_OBJ"
 )
 
 type Object interface {
@@ -204,6 +205,27 @@ type Class struct {
 	Env     *Environment
 }
 
-func (c *Class) Inspect() string { return "<class:" + c.Name + ">" }
+func (c *Class) Inspect() string {
+	var out bytes.Buffer
+	out.WriteString("<class:" + c.Name + ">")
+
+	members := []string{}
+	for _, mem := range c.Members {
+		members = append(members, mem.String())
+	}
+	out.WriteString("{")
+	out.WriteString(strings.Join(members, ", "))
+	out.WriteString("}")
+
+	return out.String()
+}
 
 func (c *Class) Type() ObjectType { return CLASS_OBJ }
+
+type Instance struct {
+	Class *Class
+	Env   *Environment
+}
+
+func (oi *Instance) Inspect() string  { return "<Instance:" + oi.Class.Name + ">" }
+func (oi *Instance) Type() ObjectType { return INSTANCE_OBJ }
