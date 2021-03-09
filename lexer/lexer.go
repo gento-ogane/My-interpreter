@@ -81,6 +81,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.RBRACKET, l.ch)
 	case ':':
 		tok = newToken(token.COLON, l.ch)
+	case '.':
+		tok = newToken(token.DOT, l.ch)
 
 	case '"': //string型の追加
 		tok.Type = token.STRING

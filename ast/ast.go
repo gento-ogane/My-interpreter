@@ -451,19 +451,19 @@ func (n *NewExpression) String() string {
 	return out.String()
 }
 
-// type MethodCallExpression struct {
-// 	Token  token.Token
-// 	Object Expression
-// 	Call   Expression
-// }
+type MethodCallExpression struct {
+	Token  token.Token
+	Object Expression //呼び出し元の値
+	Call   Expression //呼び出し先の値
+}
 
-// func (mc *MethodCallExpression) expressionNode()      {}
-// func (mc *MethodCallExpression) TokenLiteral() string { return mc.Token.Literal }
-// func (mc *MethodCallExpression) String() string {
-// 	var out bytes.Buffer
-// 	out.WriteString(mc.Object.String())
-// 	out.WriteString(".")
-// 	out.WriteString(mc.Call.String())
+func (mc *MethodCallExpression) expressionNode()      {}
+func (mc *MethodCallExpression) TokenLiteral() string { return mc.Token.Literal }
+func (mc *MethodCallExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString(mc.Object.String())
+	out.WriteString(".")
+	out.WriteString(mc.Call.String())
 
-// 	return out.String()
-// }
+	return out.String()
+}

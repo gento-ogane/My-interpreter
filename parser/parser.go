@@ -27,6 +27,7 @@ var precedences = map[token.TokenType]int{
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
 	token.LPAREN:   CALL,
+	token.DOT:      CALL,
 	token.LBRACKET: INDEX,
 }
 
@@ -63,7 +64,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression) //添字演算式の構文解析関数
-	// p.registerInfix(token.DOT, p.parseMethodCallExpression)
+	p.registerInfix(token.DOT, p.parseMethodCallExpression)
 
 	//２つのトークンを読み込む
 	p.nextToken()
@@ -568,36 +569,16 @@ func (p *Parser) parseNewExpression() ast.Expression {
 	return newExp
 }
 
-// func (p *Parser) parseMethodCallExpression(obj ast.Expression) ast.Expression {
-// 	methodCall := &ast.MethodCallExpression{Token: p.curToken, Object: obj}
-// 	p.nextToken()
+func (p *Parser) parseMethodCallExpression(obj ast.Expression) ast.Expression {
+	methodCall := &ast.MethodCallExpression{Token: p.curToken, Object: obj}
+	p.nextToken()
 
-// 	name := p.parseIdentifier()
-// 	if !p.peekTokenIs(token.LPAREN) {
-// 		//methodCall.Call = p.parseExpression(LOWEST)
-// 		//Note: here the precedence should not be `LOWEST`, or else when parsing below line:
-// 		//     logger.LDATE + 1 ==> logger.(LDATE + 1)
-// 		methodCall.Call = p.parseExpression(CALL)
-// 	} else {
-// 		p.nextToken()
-// 		methodCall.Call = p.parseCallExpression(name)
-// 	}
-
-// 	return methodCall
-// }
-
-// //引数なし。new Classname()
-// func (p *Parser) parseNewExpression() ast.Expression {
-// 	newExp := &ast.NewExpression{Token: p.curToken}
-
-// 	p.nextToken()
-// 	exp := p.parseExpression(LOWEST) //??
-
-// 	call, ok := exp.(*ast.CallExpression)
-// 	if !ok {
-// 		return nil
-// 	}
-
-// 	newExp.Class = call.Function //ここで、クラス名"classname"を入れている。
-// 	return newExp
-// }
+	name := p.parseIdentifier()
+	if !p.peekTokenIs(token.LPAREN) {
+		methodCall.Call = p.parseExpression(CALL)
+	} else {
+		p.nextToken()
+		methodCall.Call = p.parseCallExpression(name)
+	}
+	return methodCall
+}

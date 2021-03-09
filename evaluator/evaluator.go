@@ -106,6 +106,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.NewExpression:
 		return evalNewExpression(node, env)
 
+	case *ast.MethodCallExpression:
+		return evalMethodCallExpression(node, env)
+
 	case *ast.PrefixExpression: //前置演算式。Token(type),Operator(string),right(Expression)から成る
 		right := Eval(node.Right, env) //まず右の式を評価してObjectを得る。
 		if isError(right) {
@@ -490,9 +493,35 @@ func evalNewExpression(n *ast.NewExpression, env *object.Environment) object.Obj
 	if !ok {
 		fmt.Println("error2")
 	}
-	fmt.Printf(clsObj.Inspect())
+	newScope := object.NewEnclosedEnvironment(env)
+	for _, member := range clsObj.Members {
+		Eval(member, newScope)
+	}
 
-	instance := &object.Instance{Class: clsObj, Env: env} //閉じた環境にclsObjを入れる。
+	instance := &object.Instance{Class: clsObj, Env: newScope} //閉じた環境にclsObjを入れる。
 
 	return instance
+}
+
+func evalMethodCallExpression(call *ast.MethodCallExpression, env *object.Environment) object.Object {
+	obj := Eval(call.Object, env)
+	if obj.Type() == object.ERROR_OBJ {
+		return obj
+	}
+	switch m := obj.(type) {
+	case *object.Instance: //.の左側のtype
+		instanceObj := m
+		switch o := call.Call.(type) { //.の右側のtype
+		case *ast.Identifier:
+			val, ok := instanceObj.Env.Get(o.Value)
+			fmt.Println(val.Type())
+			if ok {
+				return val
+			}
+		default:
+			fmt.Println(o)
+		}
+
+	}
+	return NULL
 }

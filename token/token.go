@@ -35,6 +35,7 @@ const (
 	SEMICOLON = ";"
 
 	COLON = ":"
+	DOT   = "."
 
 	LPAREN   = "("
 	RPAREN   = ")"
@@ -53,6 +54,7 @@ const (
 	ELSE     = "ELSE"
 	RETURN   = "RETURN"
 	CLASS    = "CLASS"
+	NEW      = "NEW"
 )
 
 var keywords = map[string]TokenType{
@@ -65,6 +67,7 @@ var keywords = map[string]TokenType{
 	"else":   ELSE,
 	"return": RETURN,
 	"class":  CLASS,
+	"new":    NEW,
 }
 
 //渡された識別子がキーワードかどうかを確認、違うのならばTokenType定数を返す。
