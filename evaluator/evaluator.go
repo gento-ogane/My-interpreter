@@ -514,14 +514,12 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, env *object.Enviro
 		switch o := call.Call.(type) { //.の右側のtype
 		case *ast.Identifier:
 			val, ok := instanceObj.Env.Get(o.Value)
-			fmt.Println(val.Type())
 			if ok {
 				return val
 			}
-		default:
-			fmt.Println(o)
+		case *ast.CallExpression:
+			return Eval(o, instanceObj.Env)
 		}
-
 	}
 	return NULL
 }
