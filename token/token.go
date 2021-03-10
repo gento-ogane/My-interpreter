@@ -46,6 +46,7 @@ const (
 
 	//キーワード
 	FUNCTION = "FUNCTION"
+	FUNC_DEC = "FUNC_DEC"
 	WHILE    = "WHILE"
 	LET      = "LET"
 	TRUE     = "TRUE"
@@ -58,16 +59,17 @@ const (
 )
 
 var keywords = map[string]TokenType{
-	"fn":     FUNCTION,
-	"while":  WHILE,
-	"let":    LET,
-	"true":   TRUE,
-	"false":  FALSE,
-	"if":     IF,
-	"else":   ELSE,
-	"return": RETURN,
-	"class":  CLASS,
-	"new":    NEW,
+	"fn":       FUNCTION,
+	"function": FUNC_DEC,
+	"while":    WHILE,
+	"let":      LET,
+	"true":     TRUE,
+	"false":    FALSE,
+	"if":       IF,
+	"else":     ELSE,
+	"return":   RETURN,
+	"class":    CLASS,
+	"new":      NEW,
 }
 
 //渡された識別子がキーワードかどうかを確認、違うのならばTokenType定数を返す。

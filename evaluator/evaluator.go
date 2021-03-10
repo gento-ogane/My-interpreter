@@ -52,6 +52,11 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		body := node.Body
 		return &object.Function{Parameters: params, Env: env, Body: body}
 
+	case *ast.FunctionStatement:
+		funcObj := Eval(node.FunctionLiteral, env)
+		env.Set(node.Name.String(), funcObj)
+		return funcObj
+
 	//関数を呼び出す
 	case *ast.CallExpression:
 		if node.Function.TokenLiteral() == "quote" {

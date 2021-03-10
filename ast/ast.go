@@ -261,11 +261,12 @@ func (f *FunctionStatement) String() string {
 
 	out.WriteString("fn ")
 	out.WriteString(f.Name.String())
-	//params := []strings{}
-	//for _, p := range f.FunctionLiteral.Parameters {
-	//}
+	params := []string{}
+	for _, p := range f.FunctionLiteral.Parameters {
+		params = append(params, p.String())
+	}
 	out.WriteString(" (")
-	//out.WriteString(strings.Join(params, ", "))
+	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")
 	out.WriteString("{ ")
 	out.WriteString(f.FunctionLiteral.Body.String())
@@ -451,6 +452,7 @@ func (n *NewExpression) String() string {
 	return out.String()
 }
 
+//.メソッドでの呼び出し式
 type MethodCallExpression struct {
 	Token  token.Token
 	Object Expression //呼び出し元の値

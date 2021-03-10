@@ -106,6 +106,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseLetStatement()
 	case token.RETURN:
 		return p.parseReturnStatement()
+	case token.FUNC_DEC:
+		return p.parseFunctionStatement()
 	case token.CLASS:
 		return p.parseClassStatement()
 	default:
@@ -359,6 +361,19 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		p.nextToken()
 	}
 	return block
+}
+
+//function genmaru(x){x+1}
+func (p *Parser) parseFunctionStatement() *ast.FunctionStatement {
+	stmt := &ast.FunctionStatement{Token: p.curToken}
+	p.nextToken()
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	stmt.FunctionLiteral = p.parseFunctionLiteral().(*ast.FunctionLiteral)
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+	fmt.Println(stmt.String())
+	return stmt
 }
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {
