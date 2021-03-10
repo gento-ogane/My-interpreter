@@ -545,6 +545,8 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 		switch s := statement.(type) {
 		case *ast.LetStatement:
 			cls.Members = append(cls.Members, s)
+		case *ast.FunctionStatement:
+			cls.Methods[s.Name.String()] = s
 		default:
 			return nil
 		}

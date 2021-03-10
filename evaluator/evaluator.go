@@ -475,9 +475,9 @@ func evalClassLiteral(c *ast.ClassLiteral, env *object.Environment) object.Objec
 	for _, member := range c.Members {
 		Eval(member, newScope) //拡張環境先で変数を入れる。
 	}
-	// for k, f := range c.Methods {
-	// 	clsObj.Methods[k] = Eval(f, env).(*object.Function)
-	// }
+	for k, f := range c.Methods {
+		clsObj.Methods[k] = Eval(f, newScope).(*object.Function)
+	}
 
 	return clsObj
 }
@@ -501,6 +501,9 @@ func evalNewExpression(n *ast.NewExpression, env *object.Environment) object.Obj
 	newScope := object.NewEnclosedEnvironment(env)
 	for _, member := range clsObj.Members {
 		Eval(member, newScope)
+	}
+	for k, f := range clsObj.Methods {
+		newScope.Set(k, f)
 	}
 
 	instance := &object.Instance{Class: clsObj, Env: newScope} //閉じた環境にclsObjを入れる。
