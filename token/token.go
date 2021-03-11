@@ -56,6 +56,7 @@ const (
 	RETURN   = "RETURN"
 	CLASS    = "CLASS"
 	NEW      = "NEW"
+	FOR      = "FOR"
 )
 
 var keywords = map[string]TokenType{
@@ -70,6 +71,7 @@ var keywords = map[string]TokenType{
 	"return":   RETURN,
 	"class":    CLASS,
 	"new":      NEW,
+	"for":      FOR,
 }
 
 //渡された識別子がキーワードかどうかを確認、違うのならばTokenType定数を返す。

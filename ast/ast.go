@@ -469,3 +469,32 @@ func (mc *MethodCallExpression) String() string {
 
 	return out.String()
 }
+
+type ForLoop struct {
+	Token  token.Token
+	Init   Expression
+	Cond   Expression
+	Update Expression
+	Block  *BlockStatement
+}
+
+func (fl *ForLoop) expressionNode()      {}
+func (fl *ForLoop) TokenLiteral() string { return fl.Token.Literal }
+
+func (fl *ForLoop) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("for")
+	out.WriteString(" ( ")
+	out.WriteString(fl.Init.String())
+	out.WriteString(" ; ")
+	out.WriteString(fl.Cond.String())
+	out.WriteString(" ; ")
+	out.WriteString(fl.Update.String())
+	out.WriteString(" ) ")
+	out.WriteString(" { ")
+	out.WriteString(fl.Block.String())
+	out.WriteString(" }")
+
+	return out.String()
+}

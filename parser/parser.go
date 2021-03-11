@@ -52,6 +52,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 	p.registerPrefix(token.WHILE, p.parseWhileExpression)
 	p.registerPrefix(token.NEW, p.parseNewExpression)
+	p.registerPrefix(token.FOR, p.parseForLoopExpression)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn) //mapの初期化(makeは指定された型の、初期化された使用できるようにしたマップを返す)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -598,4 +599,33 @@ func (p *Parser) parseMethodCallExpression(obj ast.Expression) ast.Expression {
 		methodCall.Call = p.parseCallExpression(name)
 	}
 	return methodCall
+}
+
+func (p *Parser) parseForLoopExpression() ast.Expression {
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	p.nextToken()
+	init := p.parseExpression(LOWEST)
+	p.nextToken()
+	p.nextToken()
+	condition := p.parseExpression(LOWEST)
+	p.nextToken()
+	p.nextToken()
+	update := p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+	loop := &ast.ForLoop{Token: p.curToken, Init: init, Cond: condition, Update: update}
+	loop.Block = p.parseBlockStatement()
+
+	fmt.Println(loop)
+
+	return loop
 }
