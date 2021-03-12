@@ -30,3 +30,17 @@ func (e *Environment) Set(name string, val Object) Object {
 	e.store[name] = val
 	return val
 }
+
+func (s *Environment) Reset(name string, val Object) (Object, bool) {
+	var ok bool
+	_, ok = s.store[name]
+	if ok {
+		s.store[name] = val
+	}
+
+	if !ok {
+		s.store[name] = val
+		ok = true
+	}
+	return val, ok
+}

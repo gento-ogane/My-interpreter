@@ -17,18 +17,35 @@ type Parser struct {
 	infixParseFns  map[token.TokenType]infixParseFn  //中置のtoken.Typeから対応する関数を呼び出す
 }
 
+const (
+	_int = iota
+	LOWEST
+	ASSIGN
+	EQUELS      //==
+	LESSGREATER //> OR <
+	SUM         //+
+	PRODUCT     //*
+	PREFIX      //-X OR !X
+	CALL        //myFunction(X)
+	INDEX
+	INCREMENT
+)
+
 var precedences = map[token.TokenType]int{
-	token.EQ:       EQUELS,
-	token.NOT_EQ:   EQUELS,
-	token.LT:       LESSGREATER,
-	token.GT:       LESSGREATER,
-	token.PLUS:     SUM,
-	token.MINUS:    SUM,
-	token.SLASH:    PRODUCT,
-	token.ASTERISK: PRODUCT,
-	token.LPAREN:   CALL,
-	token.DOT:      CALL,
-	token.LBRACKET: INDEX,
+	token.ASSIGN:    ASSIGN,
+	token.EQ:        EQUELS,
+	token.NOT_EQ:    EQUELS,
+	token.LT:        LESSGREATER,
+	token.GT:        LESSGREATER,
+	token.PLUS:      SUM,
+	token.MINUS:     SUM,
+	token.SLASH:     PRODUCT,
+	token.ASTERISK:  PRODUCT,
+	token.LPAREN:    CALL,
+	token.DOT:       CALL,
+	token.LBRACKET:  INDEX,
+	token.INCREMENT: INCREMENT,
+	token.DECREMENT: INCREMENT,
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -53,6 +70,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.WHILE, p.parseWhileExpression)
 	p.registerPrefix(token.NEW, p.parseNewExpression)
 	p.registerPrefix(token.FOR, p.parseForLoopExpression)
+	//p.registerPrefix(token.INCREMENT, p.parsePrefixExpression)
+	//p.registerPrefix(token.DECREMENT, p.parsePrefixExpression)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn) //mapの初期化(makeは指定された型の、初期化された使用できるようにしたマップを返す)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -66,6 +85,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression) //添字演算式の構文解析関数
 	p.registerInfix(token.DOT, p.parseMethodCallExpression)
+	//p.registerInfix(token.INCREMENT, p.parsePostfixExpression)
+	//p.registerInfix(token.DECREMENT, p.parsePostfixExpression)
+	p.registerInfix(token.ASSIGN, p.parseAssignExpression)
 
 	//２つのトークンを読み込む
 	p.nextToken()
@@ -88,6 +110,10 @@ func (p *Parser) nextToken() {
 func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{} //最初にastルートノードの作成。
 	program.Statements = []ast.Statement{}
+
+	if p.curTokenIs(token.SEMICOLON) && p.peekTokenIs(token.EOF) {
+		return program
+	}
 
 	for p.curToken.Type != token.EOF { //EOFトークンに達するまで入力のトークンを繰り返して読む。
 		stmt := p.parseStatement() //どんな種類の文かを判断し、そのstatementを返却する。
@@ -204,18 +230,6 @@ func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
-const (
-	_int = iota
-	LOWEST
-	EQUELS      //==
-	LESSGREATER //> OR <
-	SUM         //+
-	PRODUCT     //*
-	PREFIX      //-X OR !X
-	CALL        //myFunction(X)
-	INDEX
-)
-
 //式の構文解析関数
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type] //p.curToken.Typeの前置に関連つけられた構文解析関数があるかを確認
@@ -284,6 +298,12 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression.Right = p.parseExpression(precedences)
 	return expression
 }
+
+// func (p *Parser) parsePostfixExpression(left ast.Expression) ast.Expression {
+// 	expression := &ast.PostfixExpression{Token: p.curToken, Left: left, Operator: p.curToken.Literal}
+// 	fmt.Println(left)
+// 	return expression
+// }
 
 //tokenを読み込んで、それの優先順位を把握する
 func (p *Parser) peekPrecedence() int {
@@ -373,7 +393,6 @@ func (p *Parser) parseFunctionStatement() *ast.FunctionStatement {
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
-	fmt.Println(stmt.String())
 	return stmt
 }
 
@@ -628,4 +647,14 @@ func (p *Parser) parseForLoopExpression() ast.Expression {
 	fmt.Println(loop)
 
 	return loop
+}
+
+func (p *Parser) parseAssignExpression(name ast.Expression) ast.Expression {
+	e := &ast.AssignExpression{Token: p.curToken}
+	if n, ok := name.(*ast.Identifier); ok {
+		e.Name = n
+	}
+	p.nextToken()
+	e.Value = p.parseExpression(LOWEST)
+	return e
 }

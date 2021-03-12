@@ -39,6 +39,10 @@ type Integer struct {
 func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
 func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
 
+func NewInteger(i int64) *Integer {
+	return &Integer{Value: i}
+}
+
 //真偽値
 type Boolean struct {
 	Value bool

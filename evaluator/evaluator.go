@@ -131,6 +131,15 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return right
 		}
 		return evalInfixExpression(node.Operator, left, right)
+
+		// case *ast.PostfixExpression:
+		// 	left := Eval(node.Left, env)
+		// 	if isError(left) {
+		// 		return left
+		// 	}
+		// 	return evalPostfixExpression(left, node.Operator)
+		// case *ast.AssignExpression:
+		// 	return evalAssignExpression(node, env)
 	}
 	return nil
 }
@@ -153,6 +162,41 @@ func evalPrefixExpression(operator string, right object.Object) object.Object {
 		return newError("unknown operator: %s%s", operator, right.Type())
 	}
 }
+
+// func evalPostfixExpression(left object.Object, operator string) object.Object {
+// 	switch operator {
+// 	case "++":
+// 		return evalIncrementPostfixOperatorExpression(left)
+// 	case "--":
+// 		return evalDecrementPostfixOperatorExpression(left)
+// 	default:
+// 		return newError("unknown operator: %s%s", operator, left.Type())
+// 	}
+// }
+
+// func evalIncrementPostfixOperatorExpression(left object.Object) object.Object {
+// 	switch left.Type() {
+// 	case object.INTEGER_OBJ: //Integerのみ後置演算のみ
+// 		leftObj := left.(*object.Integer)
+// 		returnVal := object.NewInteger(leftObj.Value)
+// 		leftObj.Value = leftObj.Value + 1
+// 		return returnVal
+// 	default:
+// 		return NULL
+// 	}
+// }
+
+// func evalDecrementPostfixOperatorExpression(left object.Object) object.Object {
+// 	switch left.Type() {
+// 	case object.INTEGER_OBJ: //Integerのみ後置演算のみ
+// 		leftObj := left.(*object.Integer)
+// 		returnVal := object.NewInteger(leftObj.Value)
+// 		leftObj.Value = leftObj.Value - 1
+// 		return returnVal
+// 	default:
+// 		return NULL
+// 	}
+// }
 
 //right(右オペランド)の反転した値を返却する。
 func evalBangOperatorExpression(right object.Object) object.Object {
@@ -528,6 +572,26 @@ func evalMethodCallExpression(call *ast.MethodCallExpression, env *object.Enviro
 		case *ast.CallExpression:
 			return Eval(o, instanceObj.Env)
 		}
+	}
+	return NULL
+}
+
+func evalAssignExpression(a *ast.AssignExpression, env *object.Environment) object.Object {
+	val := Eval(a.Value, env)
+	if val.Type() == object.ERROR_OBJ {
+		return val
+	}
+
+	var name string
+	switch nodeType := a.Name.(type) {
+	case *ast.Identifier:
+		name = nodeType.Value
+	case *ast.IndexExpression:
+		name = nodeType.Left.(*ast.Identifier).Value
+	}
+	v, ok := env.Reset(name, val)
+	if ok {
+		return v
 	}
 	return NULL
 }
