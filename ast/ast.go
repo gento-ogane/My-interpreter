@@ -172,25 +172,25 @@ func (oe *InfixExpression) String() string {
 	return out.String()
 }
 
-// type PostfixExpression struct {
-// 	Token    token.Token //演算子トークン、例えば「+」
-// 	Left     Expression
-// 	Operator string
-// }
+type PostfixExpression struct {
+	Token    token.Token //演算子トークン、例えば「+」
+	Left     Expression
+	Operator string
+}
 
-// func (pe *PostfixExpression) expressionNode()      {}
-// func (pe *PostfixExpression) TokenLiteral() string { return pe.Token.Literal }
-// func (pe *PostfixExpression) String() string {
-// 	var out bytes.Buffer
+func (pe *PostfixExpression) expressionNode()      {}
+func (pe *PostfixExpression) TokenLiteral() string { return pe.Token.Literal }
+func (pe *PostfixExpression) String() string {
+	var out bytes.Buffer
 
-// 	out.WriteString("(")
-// 	out.WriteString(pe.Left.String())
-// 	out.WriteString(pe.Operator)
-// 	out.WriteString(")")
-// 	//わざと()でくくることで、どのオペランドがどの演算子に属するのかがわかる
+	out.WriteString("(")
+	out.WriteString(pe.Left.String())
+	out.WriteString(pe.Operator)
+	out.WriteString(")")
+	//わざと()でくくることで、どのオペランドがどの演算子に属するのかがわかる
 
-// 	return out.String()
-// }
+	return out.String()
+}
 
 type Boolean struct {
 	Token token.Token

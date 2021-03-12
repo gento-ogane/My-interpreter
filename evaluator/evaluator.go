@@ -132,14 +132,14 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		return evalInfixExpression(node.Operator, left, right)
 
-		// case *ast.PostfixExpression:
-		// 	left := Eval(node.Left, env)
-		// 	if isError(left) {
-		// 		return left
-		// 	}
-		// 	return evalPostfixExpression(left, node.Operator)
-		// case *ast.AssignExpression:
-		// 	return evalAssignExpression(node, env)
+	case *ast.PostfixExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+		return evalPostfixExpression(left, node.Operator)
+	case *ast.AssignExpression:
+		return evalAssignExpression(node, env)
 	}
 	return nil
 }
@@ -163,40 +163,40 @@ func evalPrefixExpression(operator string, right object.Object) object.Object {
 	}
 }
 
-// func evalPostfixExpression(left object.Object, operator string) object.Object {
-// 	switch operator {
-// 	case "++":
-// 		return evalIncrementPostfixOperatorExpression(left)
-// 	case "--":
-// 		return evalDecrementPostfixOperatorExpression(left)
-// 	default:
-// 		return newError("unknown operator: %s%s", operator, left.Type())
-// 	}
-// }
+func evalPostfixExpression(left object.Object, operator string) object.Object {
+	switch operator {
+	case "++":
+		return evalIncrementPostfixOperatorExpression(left)
+	case "--":
+		return evalDecrementPostfixOperatorExpression(left)
+	default:
+		return newError("unknown operator: %s%s", operator, left.Type())
+	}
+}
 
-// func evalIncrementPostfixOperatorExpression(left object.Object) object.Object {
-// 	switch left.Type() {
-// 	case object.INTEGER_OBJ: //Integerのみ後置演算のみ
-// 		leftObj := left.(*object.Integer)
-// 		returnVal := object.NewInteger(leftObj.Value)
-// 		leftObj.Value = leftObj.Value + 1
-// 		return returnVal
-// 	default:
-// 		return NULL
-// 	}
-// }
+func evalIncrementPostfixOperatorExpression(left object.Object) object.Object {
+	switch left.Type() {
+	case object.INTEGER_OBJ: //Integerのみ後置演算のみ
+		leftObj := left.(*object.Integer)
+		returnVal := object.NewInteger(leftObj.Value)
+		leftObj.Value = leftObj.Value + 1
+		return returnVal
+	default:
+		return NULL
+	}
+}
 
-// func evalDecrementPostfixOperatorExpression(left object.Object) object.Object {
-// 	switch left.Type() {
-// 	case object.INTEGER_OBJ: //Integerのみ後置演算のみ
-// 		leftObj := left.(*object.Integer)
-// 		returnVal := object.NewInteger(leftObj.Value)
-// 		leftObj.Value = leftObj.Value - 1
-// 		return returnVal
-// 	default:
-// 		return NULL
-// 	}
-// }
+func evalDecrementPostfixOperatorExpression(left object.Object) object.Object {
+	switch left.Type() {
+	case object.INTEGER_OBJ: //Integerのみ後置演算のみ
+		leftObj := left.(*object.Integer)
+		returnVal := object.NewInteger(leftObj.Value)
+		leftObj.Value = leftObj.Value - 1
+		return returnVal
+	default:
+		return NULL
+	}
+}
 
 //right(右オペランド)の反転した値を返却する。
 func evalBangOperatorExpression(right object.Object) object.Object {

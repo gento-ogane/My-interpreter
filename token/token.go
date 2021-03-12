@@ -27,8 +27,10 @@ const (
 	LT = "<"
 	GT = ">"
 
-	EQ     = "=="
-	NOT_EQ = "!="
+	EQ        = "=="
+	NOT_EQ    = "!="
+	INCREMENT = "++"
+	DECREMENT = "--"
 
 	//デリミタ
 	COMMA     = ","

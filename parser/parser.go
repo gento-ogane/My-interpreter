@@ -70,8 +70,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.WHILE, p.parseWhileExpression)
 	p.registerPrefix(token.NEW, p.parseNewExpression)
 	p.registerPrefix(token.FOR, p.parseForLoopExpression)
-	//p.registerPrefix(token.INCREMENT, p.parsePrefixExpression)
-	//p.registerPrefix(token.DECREMENT, p.parsePrefixExpression)
+	p.registerPrefix(token.INCREMENT, p.parsePrefixExpression)
+	p.registerPrefix(token.DECREMENT, p.parsePrefixExpression)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn) //mapの初期化(makeは指定された型の、初期化された使用できるようにしたマップを返す)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -85,8 +85,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression) //添字演算式の構文解析関数
 	p.registerInfix(token.DOT, p.parseMethodCallExpression)
-	//p.registerInfix(token.INCREMENT, p.parsePostfixExpression)
-	//p.registerInfix(token.DECREMENT, p.parsePostfixExpression)
+	p.registerInfix(token.INCREMENT, p.parsePostfixExpression)
+	p.registerInfix(token.DECREMENT, p.parsePostfixExpression)
 	p.registerInfix(token.ASSIGN, p.parseAssignExpression)
 
 	//２つのトークンを読み込む
@@ -299,11 +299,10 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	return expression
 }
 
-// func (p *Parser) parsePostfixExpression(left ast.Expression) ast.Expression {
-// 	expression := &ast.PostfixExpression{Token: p.curToken, Left: left, Operator: p.curToken.Literal}
-// 	fmt.Println(left)
-// 	return expression
-// }
+func (p *Parser) parsePostfixExpression(left ast.Expression) ast.Expression {
+	expression := &ast.PostfixExpression{Token: p.curToken, Left: left, Operator: p.curToken.Literal}
+	return expression
+}
 
 //tokenを読み込んで、それの優先順位を把握する
 func (p *Parser) peekPrecedence() int {
@@ -571,8 +570,6 @@ func (p *Parser) parseClassLiteral() ast.Expression {
 			return nil
 		}
 	}
-	fmt.Println(cls.String())
-
 	return cls
 }
 
