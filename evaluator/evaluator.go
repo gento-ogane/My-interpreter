@@ -29,6 +29,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalIfExpression(node, env)
 	case *ast.WhileExpression:
 		return evalWhileExpression(node, env)
+	case *ast.ForLoop:
+		return evalForLoopExpression(node, env)
 	case *ast.ReturnStatement:
 		val := Eval(node.ReturnValue, env)
 		if isError(val) {
@@ -594,4 +596,46 @@ func evalAssignExpression(a *ast.AssignExpression, env *object.Environment) obje
 		return v
 	}
 	return NULL
+}
+
+func evalForLoopExpression(fl *ast.ForLoop, env *object.Environment) object.Object { //fl:For Loop
+	innerScope := object.NewEnclosedEnvironment(env)
+
+	if fl.Init != nil {
+		init := Eval(fl.Init, innerScope)
+		if init.Type() == object.ERROR_OBJ {
+			return init
+		}
+	}
+
+	condition := Eval(fl.Cond, innerScope)
+	if condition.Type() == object.ERROR_OBJ {
+		return condition
+	}
+
+	var result object.Object
+	for isTruthy(condition) {
+		newSubScope := object.NewEnclosedEnvironment(innerScope)
+		result = Eval(fl.Block, newSubScope)
+		if result.Type() == object.ERROR_OBJ {
+			return result
+		}
+
+		if fl.Update != nil {
+			newVal := Eval(fl.Update, newSubScope)
+			if newVal.Type() == object.ERROR_OBJ {
+				return newVal
+			}
+		}
+
+		condition = Eval(fl.Cond, newSubScope)
+		if condition.Type() == object.ERROR_OBJ {
+			return condition
+		}
+	}
+
+	if result == nil {
+		return NULL
+	}
+	return result
 }
